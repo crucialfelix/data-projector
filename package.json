@@ -4,7 +4,8 @@
   "description": "Load and transform datasets",
   "main": "index.js",
   "scripts": {
-    "test": "jest"
+    "test": "jest",
+    "test-watch": "jest --watch"
   },
   "keywords": [
     "dataset",
@@ -16,6 +17,7 @@
   "author": "Chris Sattinger <crucialfelix@gmail.com>",
   "license": "MIT",
   "dependencies": {
+    "d3-dsv": "^1.0.5",
     "ramda": "^0.23.0"
   },
   "devDependencies": {
