@@ -1,4 +1,5 @@
 const _ = require('ramda');
+const parseDate = require('fecha').parse;
 const { asFunction } = require('./utils');
 // global stats functions
 const numRows = dataset => dataset.data.length;
@@ -22,6 +23,7 @@ const _guessType = _.reduce((acc, value) => {
   if (!value) {
     return _.merge(acc, { null: true });
   }
+
   if (!isNaN(Number(value))) {
     // is type already number ?
     if (acc.type === 'number') {
@@ -32,10 +34,38 @@ const _guessType = _.reduce((acc, value) => {
     }
     return _.merge(acc, { mixed: true });
   }
-  // parse for date with fecha
+
+  // date ?
+  // if already set to date then just make sure it parses the currently set one
+  if (acc.dateFormat) {
+    let check = parseDate(value, acc.dateFormat);
+    if (!check) {
+      // mixed date format
+      console.log(
+        `Mixed date format detected ${value} is not ${acc.dateFormat}`
+      );
+    }
+    return acc;
+  }
+
+  // const _parseDate = _.curry(parseDate)(value);
+  const dateFormat = _.find(fmt => parseDate(value, fmt), dateFormats);
+  if (dateFormat) {
+    return _.merge(acc, { type: 'date', dateFormat });
+  }
+
   // string
   return _.merge(acc, { type: 'string', enum: acc.enum.add(value) });
 });
+
+const dateFormats = [
+  'ddd MMM DD YYYY HH:mm:ss',
+  'dddd, MMMM D, YYYY',
+  'YYYY-MM-DD',
+  'M/D/YY',
+  'MMM D, YYYY',
+  'MMMM D, YYYY'
+];
 
 const guessType = xs => {
   let typeMeta = _guessType({ type: null, null: false, enum: new Set() }, xs);
