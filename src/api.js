@@ -56,8 +56,9 @@ function loadDataset(path, functions, statsParams) {
  * Create a dataset object from an array of objects
  *
  * @param {Object} data - [{field: value, field2: value}, ...]
- * @param {Object} options
- * @returns {Object} dataset - {path, data, fields}
+ * @param {Array<String>} fields - Field names
+ * @param {String} path
+ * @returns {Object} dataset - {data, fields, path}
  */
 function createDataset(data, fields, path) {
   return {

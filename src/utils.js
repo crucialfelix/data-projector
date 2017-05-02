@@ -50,6 +50,12 @@ const asAbsolutePath = applyPromise(([cwd, path]) => {
 
 // const readFile = promisify(R.curry(fs.readFile, R._, 'utf8'));
 
+/**
+ * readFile returning a Promise for the contents
+ *
+ * @param  {string} path
+ * @return {Promise<string>}
+ */
 function readFile(path) {
   return new Promise((resolve, reject) => {
     fs.readFile(path, 'utf8', (err, data) => {
