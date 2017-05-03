@@ -93,6 +93,16 @@ describe('loadDataset', function() {
   });
 });
 
+describe('createDataset', () => {
+  it('should rename fields with empty headers to "${index}"', () => {
+    let data = [{ '': 1, header: 0.1 }];
+    let fields = ['', 'header'];
+    let dataset = api.createDataset(data, fields, '/path.csv');
+    expect(dataset.fields[0]).toEqual('0');
+    expect(dataset.data[0]['0']).toEqual(1);
+  });
+});
+
 /**
  * Compare a and b using predicate,
  * unless a is NaN in which case return always False
@@ -205,6 +215,13 @@ describe('mapDataset', function() {
     });
   });
 
+  it('should return original dataset with empty mapParams', () => {
+    return api.loadDataset(iris).then(dataset => {
+      let t = api.mapDataset(functions, [], dataset);
+      expect(t).toBe(dataset);
+    });
+  });
+
   // test with looked up function
 });
 
@@ -274,5 +291,14 @@ describe('project', () => {
         let first = dataset.data[0];
         expect(first['pan']).toBeCloseTo(first[sepalLength] * 2);
       });
+  });
+
+  it('blank mapParams should return original dataset', () => {
+    return api.project(functions, iris, statsParams, []).then(dataset => {
+      expect(dataset.fields.length).toBe(5);
+      expect(dataset.path).toBe(iris);
+      let cel = api.getCell(dataset, sepalLength, 0);
+      expect(cel).toBe(5.1);
+    });
   });
 });

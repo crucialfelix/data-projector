@@ -8,7 +8,7 @@ const { fieldsStats, globalStats, pairwiseStats } = require('./stats');
  * @param  {Object} functions - Named function registery
  * @param  {String} path
  * @param  {Object} statsParams
- * @param  {Object} mapParams
+ * @param  {Array<Object>} mapParams
  * @returns {Object}            Dataset
  */
 function project(functions, path, statsParams, mapParams) {
@@ -61,9 +61,26 @@ function loadDataset(path, functions, statsParams) {
  * @returns {Object} dataset - {data, fields, path}
  */
 function createDataset(data, fields, path) {
+  // If you rename field then you need to rename it in the data
+  // If there is more than one empty field then the data must already be
+  // broken.
+  let rows = data;
+  let fieldNames = fields.map((name, i) => {
+    if (!_.isEmpty(name)) {
+      return name;
+    }
+    let ii = String(i);
+    rows = rows.map(row => {
+      row[ii] = row[name];
+      delete row[name];
+      return row;
+    });
+    return ii;
+  });
+
   return {
-    data,
-    fields,
+    data: rows,
+    fields: fieldNames,
     path
   };
 }
@@ -184,34 +201,34 @@ function castTypes(dataset) {
  * or a function(stats, fieldName, [...args], value)
  *
  * @param {Object} functions - Named function registery
- * @param {Object} mapParams
+ * @param {Array<Object>} mapParams
  * @param {Object} dataset
  */
 function mapDataset(functions, mapParams, dataset) {
-  if (!mapParams) {
+  if (!mapParams || !mapParams.length) {
     return dataset;
   }
 
   const fields = new Set();
-  const mappers = mapParams.map(mapParam => {
+  const mappers = _.map(mapParam => {
     fields.add(mapParam.output);
     return {
       fn: makeMapFunction(functions, dataset.stats, mapParam),
       input: mapParam.input,
       output: mapParam.output
     };
-  });
+  }, mapParams);
 
   const mapRow = row => {
     const obj = {};
-    mappers.forEach(m => {
+    _.map(m => {
       obj[m.output] = m.fn(row[m.input]);
-    });
+    }, mappers);
     return obj;
   };
   const data = dataset.data.map(mapRow);
 
-  return createDataset(data, Array.from(fields));
+  return createDataset(data, Array.from(fields), dataset.path);
 }
 
 /**
@@ -246,7 +263,7 @@ function makeMapFunction(functions, stats, mapParam) {
   let numArgs = 3 + args.length;
   if (fn.length !== numArgs) {
     throw new Error(
-      `Mapping function ${mapParam.input} : ${fn} should have ${numArgs} args`
+      `Mapping function ${mapParam.input} : ${fn} should have ${numArgs} args: stats, fieldName, [...args], value`
     );
   }
   return _.curry(fn)(stats, mapParam.input, ...args);
@@ -350,6 +367,7 @@ module.exports = {
   castTypes,
   getRow,
   getCell,
-  getColumn
+  getColumn,
+  createDataset
   // linMap
 };
