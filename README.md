@@ -1,122 +1,180 @@
 # data-projector
 
-Load and transform datasets
+Load CSV datasets and map / transform the data for use.
+
+- Load CSV datasets
+- Guess types and cast data fields to types
+- Calculate stats: global, fields and pairwise (field by field correlations etc)
+- Map datasets to other datasets using transform functions
+
+This is designed to take a specification object (JSON) and load a dataset and optionally map values to requested ranges.
+
+The JSON specification objects can be saved in your application for use in presets.
+
+Status: ALPHA
+
+Currently all transformation functions are to be supplied when you
 
 ## API
 
+<a name="project"></a>
 
-<dl>
-<dt><a href="#loadDataset">loadDataset(cwd, path)</a> ⇒ <code>Promise.&lt;Object&gt;</code></dt>
-<dd><p>Load a dataset from path</p>
-</dd>
-<dt><a href="#loadTransformDataset">loadTransformDataset(cwd, params)</a> ⇒ <code>Promise.&lt;Object&gt;</code></dt>
-<dd><p>Load a dataset and transform it using the <code>path</code> and <code>transform</code> specification
-in params.</p>
-</dd>
-<dt><a href="#transformDataset">transformDataset(dataset, transformParams)</a> ⇒ <code>Object</code></dt>
-<dd><p>Transform a dataset using <code>transform</code> specification in params.</p>
-</dd>
-<dt><a href="#calculateStats">calculateStats(dataset, statsParams)</a> ⇒ <code>Object</code></dt>
-<dd><p>Calculate statistics (minval, maxval, avg etc.) for a dataset using a stats specification.</p>
-</dd>
-<dt><a href="#mapDataset">mapDataset(dataset, mapParams)</a> ⇒ <code>Object</code></dt>
-<dd><p>Map values in a dataset to produce a new dataset.</p>
-</dd>
-<dt><a href="#getRow">getRow(dataset, fields)</a> ⇒ <code>Object</code></dt>
-<dd><p>Get a single row as an Object.</p>
-<p>As this function is curried you can bake in dataset and fields:</p>
-<pre><code class="language-javascript">getter = getRow(dataset, null);  // returns a function with first two args satisfied
-getter(12);  // get row 12
-</code></pre>
-</dd>
-<dt><a href="#getCell">getCell(dataset, field, index)</a> ⇒ <code>mixed</code></dt>
-<dd><p>Get a single data value (row, column)</p>
-<p>As this function is curried you can bake in dataset and field:</p>
-<pre><code class="language-javascript"> getter = getCell(dataset, &#39;sepalLength&#39;);
- getter(12);  // get value at row 12, field &#39;sepalLength&#39;
-</code></pre>
-</dd>
-<dt><a href="#getColumn">getColumn(dataset, field)</a> ⇒ <code>Array.&lt;mixed&gt;</code></dt>
-<dd><p>Get all values for a field (aka column)</p>
-<p>As this function is curried you can bake in dataset:</p>
-<pre><code class="language-javascript"> getter = getColumn(dataset);
- getter(&#39;sepalLength&#39;);  // get the array of values for the sepalLength field
-</code></pre>
-</dd>
-<dt><a href="#linMap">linMap(dataset, minval, maxval, field)</a> ⇒ <code>Array.&lt;mixed&gt;</code></dt>
-<dd><p>Map a dataset value from it&#39;s own extent to the specified linear minval/maxval domain</p>
-<p>Create a mapping function by supplying all arguments except the last one:</p>
-<pre><code class="language-javascript">f = linMap(dataset, 0, 100, &#39;sepalLength&#39;);
-val = f(12);  // Map sepalLength in row 12 to the linear range 0..100
-</code></pre>
-</dd>
-</dl>
+## project(functions, path, statsParams, mapParams) ⇒ <code>Object</code>
+Load a dataset from disk, calculate statistics and apply transformations
 
-<a name="loadDataset"></a>
 
-## loadDataset(cwd, path) ⇒ <code>Promise.&lt;Object&gt;</code>
-Load a dataset from path
+**Returns**: <code>Object</code> - Dataset
 
-**Kind**: global function
+| Param | Type | Description |
+| --- | --- | --- |
+| functions | <code>Object</code> | Named function registery |
+| path | <code>String</code> |  |
+| statsParams | <code>Object</code> |  |
+| mapParams | <code>Array.&lt;Object&gt;</code> |  |
+
+<a name="readParseDataset"></a>
+
+## readParseDataset(path) ⇒ <code>Promise.&lt;Object&gt;</code>
+Load and parse a dataset from path.
+Stats are not yet calculated so types are unknown
+and all fields are strings.
+
+
 **Returns**: <code>Promise.&lt;Object&gt;</code> - Promise for a dataset
 
 | Param | Type | Description |
 | --- | --- | --- |
-| cwd | <code>string</code> | Current working directory to resolve relative paths |
-| path | <code>string</code> | Absolute or relative path to file |
+| path | <code>String</code> | Absolute path to file |
 
-<a name="loadTransformDataset"></a>
+<a name="loadDataset"></a>
 
-## loadTransformDataset(cwd, params) ⇒ <code>Promise.&lt;Object&gt;</code>
-Load a dataset and transform it using the `path` and `transform` specification
-in params.
+## loadDataset(path, functions, statsParams) ⇒ <code>Promise.&lt;Object&gt;</code>
+Load and parse a dataset and calculate stats and coerce types of field values.
 
-**Kind**: global function
-**Returns**: <code>Promise.&lt;Object&gt;</code> - Promise for a loaded and transformed dataset
+
+**Returns**: <code>Promise.&lt;Object&gt;</code> - Promise for a dataset
 
 | Param | Type | Description |
 | --- | --- | --- |
-| cwd | <code>string</code> | Current working directory to resolve relative paths |
-| params | <code>Object</code> | transform |
+| path | <code>String</code> | Absolute path to file |
+| functions | <code>Object</code> | Named function registery |
+| statsParams | <code>Object</code> | The `stats` object from params |
 
-<a name="transformDataset"></a>
+<a name="createDataset"></a>
 
-## transformDataset(dataset, transformParams) ⇒ <code>Object</code>
-Transform a dataset using `transform` specification in params.
+## createDataset(data, fields, path) ⇒ <code>Object</code>
+Create a dataset object from an array of objects
 
-**Kind**: global function
-**Returns**: <code>Object</code> - dataset
+
+**Returns**: <code>Object</code> - dataset - {data, fields, path}
 
 | Param | Type | Description |
 | --- | --- | --- |
-| dataset | <code>Object</code> | As returned by `loadDataset` or from a previous                          transformation. |
-| transformParams | <code>Object</code> | The `transform` object from params |
+| data | <code>Object</code> | [{field: value, field2: value}, ...] |
+| fields | <code>Array.&lt;String&gt;</code> | Field names |
+| path | <code>String</code> |  |
 
-<a name="calculateStats"></a>
+<a name="_calculateStats"></a>
 
-## calculateStats(dataset, statsParams) ⇒ <code>Object</code>
+## _calculateStats(functions, statsParams, dataset) ⇒ <code>Object</code>
 Calculate statistics (minval, maxval, avg etc.) for a dataset using a stats specification.
 
-**Kind**: global function
+
 **Returns**: <code>Object</code> - stats
 
 | Param | Type | Description |
 | --- | --- | --- |
+| functions | <code>Object</code> | Named function registery |
+| statsParams | <code>Object</code> | The `stats` object from params |
 | dataset | <code>Object</code> | As returned by loadDataset or from a previous transformation. |
-| statsParams | <code>Object</code> | The `transform` object from params |
 
-<a name="mapDataset"></a>
+<a name="calculateStats"></a>
 
-## mapDataset(dataset, mapParams) ⇒ <code>Object</code>
-Map values in a dataset to produce a new dataset.
+## calculateStats(functions, statsParams, dataset) ⇒ <code>Object</code>
+Calculate statistics and return a new dataset objects with .stats set
 
-**Kind**: global function
-**Returns**: <code>Object</code> - dataset - Transformed dataset. May contain less or more fields.
+
+**Returns**: <code>Object</code> - dataset
 
 | Param | Type | Description |
 | --- | --- | --- |
-| dataset | <code>Object</code> | As returned by loadDataset or from a previous transformation. |
-| mapParams | <code>Object</code> | The `map` object from params |
+| functions | <code>Object</code> | Named function registery |
+| statsParams | <code>Object</code> |  |
+| dataset | <code>Object</code> |  |
+
+<a name="castTypes"></a>
+
+## castTypes(dataset) ⇒ <code>Object</code>
+Having guessed types with calculateStats, cast all fields to the guessed types.
+
+- This converts '1.1' to 1.1
+- Enums of strings to their integer indices
+- Date strings to Date objects
+- String fields with high cardinality remain strings
+
+
+**Returns**: <code>Object</code> - Dataset object with values cast to guessed types
+
+| Param | Type | Description |
+| --- | --- | --- |
+| dataset | <code>Object</code> | Dataset object |
+
+<a name="mapDataset"></a>
+
+## mapDataset(functions, mapParams, dataset)
+mapDataset
+
+Map input fields to output fields using mapping functions as specified in
+mapParams
+
+```js
+{
+   input: 'inFieldName',
+   output: 'outFieldName'
+   fn: 'linear',  // named function in functions registry
+   args: [0, 1]   // parameters for linear mapping function
+}
+```
+
+fn may be a String key to a function in the functions registery
+or a function(stats, fieldName, [...args], value)
+
+
+
+| Param | Type | Description |
+| --- | --- | --- |
+| functions | <code>Object</code> | Named function registery |
+| mapParams | <code>Array.&lt;Object&gt;</code> |  |
+| dataset | <code>Object</code> |  |
+
+<a name="makeMapFunction"></a>
+
+## makeMapFunction(functions, stats, mapParam) ⇒ <code>function</code>
+makeMapFunction from mapParam
+
+mapParam:
+ .fn
+ .args
+
+Where fn is a Function or a String key to lookup Function in `functions`
+
+Function should accept: (stats, fieldName, ...args, value)
+
+Args are optional array of params to configure your mapping function.
+eg. [minval, maxval]
+
+This curries the function and calls it with:
+(stats, fieldName, ...args) and returns that mapping function which accepts just value
+and returns the mapped value.
+
+
+**Returns**: <code>function</code> - any => any
+
+| Param | Type | Description |
+| --- | --- | --- |
+| functions | <code>Object</code> | Named function registery |
+| stats | <code>Object</code> |  |
+| mapParam | <code>Object</code> |  |
 
 <a name="getRow"></a>
 
@@ -130,7 +188,7 @@ getter = getRow(dataset, null);  // returns a function with first two args satis
 getter(12);  // get row 12
 ```
 
-**Kind**: global function
+
 **Returns**: <code>Object</code> - - The object for this row.
 
 | Param | Type | Description |
@@ -150,19 +208,19 @@ As this function is curried you can bake in dataset and field:
  getter(12);  // get value at row 12, field 'sepalLength'
 ```
 
-**Kind**: global function
+
 **Returns**: <code>mixed</code> - - The value for this cell.
 
 | Param | Type | Description |
 | --- | --- | --- |
 | dataset | <code>Object</code> |  |
-| field | <code>string</code> | key of the field to select |
-| index | <code>number</code> | integer index of row |
+| field | <code>String</code> | key of the field to select |
+| index | <code>Number</code> | integer index of row |
 
 <a name="getColumn"></a>
 
 ## getColumn(dataset, field) ⇒ <code>Array.&lt;mixed&gt;</code>
-Get all values for a field (aka column)
+Get all values for a column
 
 As this function is curried you can bake in dataset:
 
@@ -171,32 +229,10 @@ As this function is curried you can bake in dataset:
  getter('sepalLength');  // get the array of values for the sepalLength field
 ```
 
-**Kind**: global function
+
 **Returns**: <code>Array.&lt;mixed&gt;</code> - - Array of values for this field
 
 | Param | Type | Description |
 | --- | --- | --- |
 | dataset | <code>Object</code> |  |
-| field | <code>string</code> | key of the field to select |
-
-<a name="linMap"></a>
-
-## linMap(dataset, minval, maxval, field) ⇒ <code>Array.&lt;mixed&gt;</code>
-Map a dataset value from it's own extent to the specified linear minval/maxval domain
-
-Create a mapping function by supplying all arguments except the last one:
-
-```js
-f = linMap(dataset, 0, 100, 'sepalLength');
-val = f(12);  // Map sepalLength in row 12 to the linear range 0..100
-```
-
-**Kind**: global function
-**Returns**: <code>Array.&lt;mixed&gt;</code> - - Array of values for this field
-
-| Param | Type | Description |
-| --- | --- | --- |
-| dataset | <code>Object</code> |  |
-| minval | <code>number</code> | Lower bound of output range |
-| maxval | <code>number</code> | Upper bound of output range |
-| field | <code>string</code> | key of the field to select |
+| field | <code>String</code> | key of the field to select |
