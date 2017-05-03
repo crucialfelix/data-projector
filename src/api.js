@@ -26,7 +26,7 @@ function project(functions, path, statsParams, mapParams) {
  * Stats are not yet calculated so types are unknown
  * and all fields are strings.
  *
- * @param {string} path - Absolute path to file
+ * @param {String} path - Absolute path to file
  * @returns {Promise<Object>} Promise for a dataset
  */
 function readParseDataset(path) {
@@ -41,7 +41,7 @@ function readParseDataset(path) {
 /**
  * Load and parse a dataset and calculate stats and coerce types of field values.
  *
- * @param {string} path - Absolute path to file
+ * @param {String} path - Absolute path to file
  * @param {Object} functions - Named function registery
  * @param {Object} statsParams - The `stats` object from params
  * @returns {Promise<Object>} Promise for a dataset
@@ -119,16 +119,15 @@ function calculateStats(functions, statsParams, dataset) {
 }
 
 /**
- * Having guessed types with calculateStats,
- * cast all fields to the guessed types.
+ * Having guessed types with calculateStats, cast all fields to the guessed types.
  *
- * This converts '1.1' to 1.1
- * Enums of strings to their integer indices
- * Date strings to Date objects
- * String fields with high cardinality remain strings
+ * - This converts '1.1' to 1.1
+ * - Enums of strings to their integer indices
+ * - Date strings to Date objects
+ * - String fields with high cardinality remain strings
  *
- * @param  {[type]} dataset [description]
- * @return {[type]}         [description]
+ * @param  {Object} dataset Dataset object
+ * @return {Object}         Dataset object with values cast to guessed types
  */
 function castTypes(dataset) {
   const castField = (key, value) => {
@@ -162,7 +161,10 @@ function castTypes(dataset) {
  * Load a dataset and transform it using the `path` and `transform` specification
  * in params.
  *
- * @param {string} cwd - Current working directory to resolve relative paths
+ * This is for radically transforming a dataset. eg. to do PCA or other
+ * dimensionality reduction or to make reduced rows for summaries.
+ *
+ * @param {String} cwd - Current working directory to resolve relative paths
  * @param {Object} params - transform
  * @returns {Promise<Object>} Promise for a loaded and transformed dataset
  */
@@ -190,12 +192,14 @@ function castTypes(dataset) {
  * Map input fields to output fields using mapping functions as specified in
  * mapParams
  *
+ * ```js
  * {
  *    input: 'inFieldName',
  *    output: 'outFieldName'
  *    fn: 'linear',  // named function in functions registry
  *    args: [0, 1]   // parameters for linear mapping function
  * }
+ * ```
  *
  * fn may be a String key to a function in the functions registery
  * or a function(stats, fieldName, [...args], value)
@@ -311,8 +315,8 @@ function getRow(dataset, index) {
  * ```
  *
  * @param {Object} dataset
- * @param {string} field - key of the field to select
- * @param {number} index - integer index of row
+ * @param {String} field - key of the field to select
+ * @param {Number} index - integer index of row
  * @returns {mixed} - The value for this cell.
  */
 function getCell(dataset, field, index) {
@@ -330,7 +334,7 @@ function getCell(dataset, field, index) {
  * ```
  *
  * @param {Object} dataset
- * @param {string} field - key of the field to select
+ * @param {String} field - key of the field to select
  * @returns {Array<mixed>} - Array of values for this field
  */
 function getColumn(dataset, field) {
@@ -348,9 +352,9 @@ function getColumn(dataset, field) {
   * ```
   *
   * @param {Object} dataset
-  * @param {number} minval - Lower bound of output range
-  * @param {number} maxval - Upper bound of output range
-  * @param {string} field - key of the field to select
+  * @param {Number} minval - Lower bound of output range
+  * @param {Number} maxval - Upper bound of output range
+  * @param {String} field - key of the field to select
   * @returns {Array<mixed>} - Array of values for this field
   */
 // function linMap(dataset, minval, maxval, field, index) {}

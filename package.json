@@ -16,6 +16,10 @@
   ],
   "author": "Chris Sattinger <crucialfelix@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/crucialfelix/data-projector.git"
+  },
   "dependencies": {
     "d3-dsv": "^1.0.5",
     "fecha": "^2.3.0",
